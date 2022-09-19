@@ -1,0 +1,11 @@
+#!/usr/bin/bash
+
+am broadcast -a com.banglejs.uart.tx -e line "Bangle.showLauncher()"
+sleep 1
+am broadcast -a com.banglejs.uart.tx -e line "require('termux.app.js').showTerminal()"
+while read line ; do
+	echo "$line"
+	am broadcast -a com.banglejs.uart.tx -e line "term.print(\"$line\n\")" & > /dev/null
+	sleep 0.05
+done
+am broadcast -a com.banglejs.uart.tx -e line "term.print(\"End of Communication\n\")" & > /dev/null

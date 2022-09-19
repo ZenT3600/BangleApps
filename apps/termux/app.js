@@ -1,5 +1,4 @@
-var uart; // require("ble_uart")
-var device; // BluetoothDevice
+
 var customCommand = "";
 // Set up terminal
 Bangle.loadWidgets();
