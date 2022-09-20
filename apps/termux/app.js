@@ -11,7 +11,14 @@ term = require("VT100").connect(termg, {
   charHeight : 8
 });
 term.print = str => {
-  for (var i of str) { term.char(i); }
+  let index = 0;
+  for (var i of str) {
+    term.char(i);
+    if (index > 26) {
+      term.char('\n');
+    }
+    index++
+  }
   if (termVisible) g.reset().drawImage(termg,R.x,R.y).setFont("6x8").setFontAlign(0,-1,1).drawString("MORE",R.w-1,(R.y+R.y2)/2);
 };
 
