@@ -4,9 +4,18 @@ am broadcast -a com.banglejs.uart.tx -e line "load('termux.app.js')"
 sleep 1
 am broadcast -a com.banglejs.uart.tx -e line "term.print(\"New Communication\n\")"
 sleep 1
-while read line ; do
+let lc=0
+while read line; do
+	lw=$(echo "$line" | wc -c)
+	up=$(expr $lw / 16)
 	echo "$line"
-	am broadcast -a com.banglejs.uart.tx -e line "term.print(\"$line\n\")" > /dev/null &
-	sleep 0.05
+	let lc=lc+up
+	echo "$line" | fold -26 | while read f; do
+		am broadcast -a com.banglejs.uart.tx -e line "term.print(\"$f\n\")" > /dev/null
+	done
+	if [ $((lc % 16)) -eq 0 ]; then
+		# am broadcast -a com.banglejs.uart.tx -e line "showTerminal()" > /dev/null
+		am broadcast -a com.banglejs.uart.tx -e line "load('termux.app.js')"
+	fi
 done
 am broadcast -a com.banglejs.uart.tx -e line "term.print(\"End of Communication\n\")" & > /dev/null
