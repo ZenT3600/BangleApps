@@ -1,7 +1,7 @@
 {
   "id": "termux",
   "name": "Termux Integration",
-  "version": "1",
+  "version": "2",
   "description": "Show Termux commands on your watch",
   "icon": "app.png",
   "type": "app",

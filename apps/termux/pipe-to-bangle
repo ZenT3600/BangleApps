@@ -1,21 +1,36 @@
 #!/usr/bin/bash
 
-am broadcast -a com.banglejs.uart.tx -e line "load('termux.app.js')"
+HISTORY_FILE=".ptb_history"
+TRAVERSED_HISTORY="$HISTORY_FILE.trav"
+
+function handle-piping() {
+	tail -f $HISTORY_FILE | while read f; do
+		echo "$f" | fold -26 | while read ff; do
+			if [ "$ff" == "---ENDOFCOMM---" ]; then
+				am broadcast -a com.banglejs.uart.tx -e line "term.print(\"End of Communication\n\")" > /dev/null
+				rm $TRAVERSED_HISTORY
+				rm $HISTORY_FILE 2> /dev/null	# this WILL throw an error
+				exit
+			fi
+			am broadcast -a com.banglejs.uart.tx -e line "term.print(\"$ff\n\")" > /dev/null
+			echo "." >> $TRAVERSED_HISTORY
+			lc=$(cat $TRAVERSED_HISTORY | wc -l)
+			if [ $((lc % 16)) -eq 0 ]; then
+				am broadcast -a com.banglejs.uart.tx -e line "load('termux.app.js')" > /dev/null
+			fi
+		done
+	done 2> /dev/null
+}
+
+am broadcast -a com.banglejs.uart.tx -e line "load('termux.app.js')" > /dev/null
 sleep 1
-am broadcast -a com.banglejs.uart.tx -e line "term.print(\"New Communication\n\")"
+am broadcast -a com.banglejs.uart.tx -e line "term.print(\"New Communication\n\")" > /dev/null
 sleep 1
-let lc=0
+touch $HISTORY_FILE
+touch $TRAVERSED_HISTORY
+handle-piping 2> /dev/null &
 while read line; do
-	lw=$(echo "$line" | wc -c)
-	up=$(expr $lw / 16)
 	echo "$line"
-	let lc=lc+up
-	echo "$line" | fold -26 | while read f; do
-		am broadcast -a com.banglejs.uart.tx -e line "term.print(\"$f\n\")" > /dev/null
-	done
-	if [ $((lc % 16)) -eq 0 ]; then
-		# am broadcast -a com.banglejs.uart.tx -e line "showTerminal()" > /dev/null
-		am broadcast -a com.banglejs.uart.tx -e line "load('termux.app.js')"
-	fi
+	echo "$line" >> $HISTORY_FILE
 done
-am broadcast -a com.banglejs.uart.tx -e line "term.print(\"End of Communication\n\")" & > /dev/null
+echo "---ENDOFCOMM---" >> $HISTORY_FILE
